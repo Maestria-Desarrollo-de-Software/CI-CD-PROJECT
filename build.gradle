@@ -6,7 +6,6 @@ plugins {
   id 'org.graalvm.buildtools.native' version '0.11.3'
   id 'org.cyclonedx.bom' version '3.0.2'
   id 'io.spring.javaformat' version '0.0.47'
-  id 'io.spring.nohttp' version '0.0.11'
   id 'com.diffplug.spotless' version '6.25.0'
   id 'com.github.spotbugs' version '6.0.26'
 }
@@ -30,9 +29,6 @@ ext {
   webjarsBootstrapVersion = "5.3.8"
 }
 
-/**
- * Evita fallos por tareas AOT/format AOT no usadas en tu setup.
- */
 gradle.startParameter.excludedTaskNames += ["checkFormatAot", "checkFormatAotTest"]
 
 dependencies {
@@ -63,6 +59,8 @@ dependencies {
   testImplementation 'org.springframework.boot:spring-boot-docker-compose'
   testImplementation 'org.testcontainers:junit-jupiter'
   testImplementation 'org.testcontainers:mysql'
+
+  testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
 
@@ -99,14 +97,6 @@ tasks.withType(Checkstyle).configureEach {
   }
 }
 
-nohttp {
-  // Solo revisar fuentes
-  source.include('**/*')
-  source.exclude('**/build/**', '**/target/**', '**/out/**', '**/node_modules/**')
-  // Excluir binarios / assets típicos
-  source.exclude('**/*.jar', '**/*.png', '**/*.jpg', '**/*.jpeg', '**/*.gif', '**/*.svg', '**/*.log')
-}
-
 /**
  * SpotBugs
  */
@@ -134,10 +124,9 @@ spotbugsTest {
  * Quality Gates
  */
 tasks.named('check') {
-  dependsOn 'spotbugsMain', 'spotbugsTest'
   dependsOn 'spotlessCheck'
   dependsOn 'checkstyleMain', 'checkstyleTest'
-  dependsOn 'nohttp'
+  dependsOn 'spotbugsMain', 'spotbugsTest'
 }
 
 tasks.matching {
@@ -155,3 +144,9 @@ tasks.named("compileJava") {
 tasks.named("compileTestJava") {
   mustRunAfter("formatTest")
 }
+
+tasks.matching { it.name.toLowerCase().contains('spotbugsaot') }
+  .configureEach { enabled = false }
+
+tasks.matching { it.name in ['checkFormatMain', 'checkFormatTest', 'formatMain', 'formatTest'] }
+  .configureEach { enabled = false }

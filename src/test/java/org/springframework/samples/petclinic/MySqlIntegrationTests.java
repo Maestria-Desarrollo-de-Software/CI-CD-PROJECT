@@ -41,30 +41,26 @@ import org.testcontainers.utility.DockerImageName;
 @Testcontainers(disabledWithoutDocker = true)
 class MySqlIntegrationTests {
 
-	@ServiceConnection
-	@Container
-	static MySQLContainer<?> mysql = new MySQLContainer<>(DockerImageName.parse("mysql:8.0"));
+  @ServiceConnection @Container
+  static MySQLContainer<?> mysql = new MySQLContainer<>(DockerImageName.parse("mysql:8.0"));
 
-	@LocalServerPort
-	int port;
+  @LocalServerPort int port;
 
-	@Autowired
-	VetRepository vets;
+  @Autowired VetRepository vets;
 
-	@Autowired
-	RestTemplateBuilder builder;
+  @Autowired RestTemplateBuilder builder;
 
-	@Test
-	void testFindAll() {
-		vets.findAll();
-		vets.findAll();
-	}
+  @Test
+  void testFindAll() {
+    vets.findAll();
+    vets.findAll();
+  }
 
-	@Test
-	void testOwnerDetails() {
-		RestTemplate template = builder.rootUri("http://localhost:" + port).build();
-		ResponseEntity<String> result = template.exchange(RequestEntity.get("/owners/1").build(), String.class);
-		assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
-	}
-
+  @Test
+  void testOwnerDetails() {
+    RestTemplate template = builder.rootUri("http://localhost:" + port).build();
+    ResponseEntity<String> result =
+        template.exchange(RequestEntity.get("/owners/1").build(), String.class);
+    assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
+  }
 }
