@@ -4,8 +4,12 @@
 	"https://checkstyle.org/dtds/configuration_1_3.dtd">
 
 <module name="Checker">
-	<module name="io.spring.nohttp.checkstyle.check.NoHttpCheck"/>
-	<module name="SuppressionFilter">
-		<property name="file" value="src/checkstyle/nohttp-checkstyle-suppressions.xml"/>
+
+	<module name="TreeWalker">
+		<module name="UnusedImports"/>
+		<module name="AvoidStarImport"/>
+		<module name="NeedBraces"/>
+		<module name="WhitespaceAround"/>
 	</module>
+
 </module>

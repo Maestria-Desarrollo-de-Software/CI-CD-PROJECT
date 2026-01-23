@@ -1,5 +1,6 @@
 package org.springframework.samples.petclinic.system;
 
+import java.util.Locale;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.LocaleResolver;
@@ -8,15 +9,12 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.i18n.LocaleChangeInterceptor;
 import org.springframework.web.servlet.i18n.SessionLocaleResolver;
 
-import java.util.Locale;
-
 /**
  * Configures internationalization (i18n) support for the application.
  *
  * <p>
  * Handles loading language-specific messages, tracking the user's language, and allowing
  * language changes via the URL parameter (e.g., <code>?lang=de</code>).
- * </p>
  *
  * @author Anuj Ashok Potdar
  */

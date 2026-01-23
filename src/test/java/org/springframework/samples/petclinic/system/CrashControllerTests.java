@@ -16,9 +16,9 @@
 
 package org.springframework.samples.petclinic.system;
 
-import org.junit.jupiter.api.Test;
-
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+
+import org.junit.jupiter.api.Test;
 
 /**
  * Test class for {@link CrashController}

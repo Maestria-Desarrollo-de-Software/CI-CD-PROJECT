@@ -1,9 +1,11 @@
 package org.springframework.samples.petclinic.system;
 
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.IOException;
-import java.nio.file.*;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -12,8 +14,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
-
-import static org.junit.jupiter.api.Assertions.fail;
+import org.junit.jupiter.api.Test;
 
 /**
  * This test ensures that there are no hard-coded strings without internationalization in
@@ -56,8 +57,9 @@ public class I18nPropertiesSyncTest {
 				String line = lines.get(i).trim();
 
 				if (line.startsWith("//") || line.startsWith("@") || line.contains("log.")
-						|| line.contains("System.out"))
+						|| line.contains("System.out")) {
 					continue;
+				}
 
 				if (file.toString().endsWith(".html")) {
 					boolean hasLiteralText = HTML_TEXT_LITERAL.matcher(line).find();
@@ -115,8 +117,9 @@ public class I18nPropertiesSyncTest {
 			String fileName = entry.getKey();
 			// We use fallback logic to include english strings, hence messages_en is not
 			// populated.
-			if (fileName.equals(baseFile) || fileName.equals("messages_en.properties"))
+			if (fileName.equals(baseFile) || fileName.equals("messages_en.properties")) {
 				continue;
+			}
 
 			Properties props = entry.getValue();
 			Set<String> missingKeys = new TreeSet<>(baseKeys);
