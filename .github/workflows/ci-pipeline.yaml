@@ -56,40 +56,42 @@ jobs:
 
   # 3) Tests backend con PostgreSQL real
   test-backend:
-    name: Test Backend with PostgreSQL
+    name: Test Backend with MySQL
     runs-on: ubuntu-latest
     needs: static-analysis-backend
     services:
-      postgres:
-        image: postgres:13
+      mysql:
+        image: mysql:8.4
         env:
-          POSTGRES_USER: test
-          POSTGRES_PASSWORD: test
-          POSTGRES_DB: testdb
+          MYSQL_DATABASE: petclinic
+          MYSQL_USER: petclinic
+          MYSQL_PASSWORD: petclinic
+          MYSQL_ROOT_PASSWORD: root
         ports:
-          - 5432:5432
+          - 3306:3306
         options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=15
+
+    env:
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_NAME: petclinic
+      DB_USER: petclinic
+      DB_PASS: petclinic
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - name: Setup JDK
-        uses: actions/setup-java@v3
+      - uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
-          java-version: '17'
-
-      - name: Run tests
-        env:
-          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/testdb
-          SPRING_DATASOURCE_USERNAME: test
-          SPRING_DATASOURCE_PASSWORD: test
-        run: |
-          ./gradlew test
+          distribution: temurin
+          java-version: "17"
+          
+      - name: Run Quality Gates
+        run: ./gradlew qualityGate
 
   # Placeholder: Lint frontend (si se agrega frontend luego)
   lint-frontend:
