@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FindBugsFilter>
+
+	<!-- Ignorar ruido del core Petclinic (dominio base) -->
+	<Match>
+		<Package name="org.springframework.samples.petclinic.model"/>
+	</Match>
+	<Match>
+		<Package name="org.springframework.samples.petclinic.owner"/>
+	</Match>
+	<Match>
+		<Package name="org.springframework.samples.petclinic.vet"/>
+	</Match>
+	<Match>
+		<Class name="~.*I18nPropertiesSyncTest.*"/>
+	</Match>
+
+	<Match>
+		<Class name="~.*MySqlIntegrationTests.*"/>
+	</Match>
+
+</FindBugsFilter>
