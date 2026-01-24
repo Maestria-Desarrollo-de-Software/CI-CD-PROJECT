@@ -59,6 +59,8 @@ dependencies {
   testImplementation 'org.springframework.boot:spring-boot-docker-compose'
   testImplementation 'org.testcontainers:junit-jupiter'
   testImplementation 'org.testcontainers:mysql'
+  compileOnly 'com.github.spotbugs:spotbugs-annotations:4.8.6'
+  testCompileOnly 'com.github.spotbugs:spotbugs-annotations:4.8.6'
 
   testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
@@ -108,6 +110,7 @@ spotbugs {
 }
 
 spotbugsMain {
+  excludeFilter = file("config/spotbugs/exclude.xml")
   reports {
     html.required = true
     xml.required = false
@@ -115,6 +118,7 @@ spotbugsMain {
 }
 
 spotbugsTest {
+  excludeFilter = file("config/spotbugs/exclude.xml")
   reports {
     html.required = true
     xml.required = false
@@ -150,6 +154,20 @@ jacocoTestReport {
     xml.required = true
     csv.required = false
   }
+}
+
+tasks.register('qualityGate') {
+  group = 'verification'
+  description = 'Runs all quality gates before push'
+  dependsOn(
+    'spotlessCheck',
+    'checkstyleMain',
+    'checkstyleTest',
+    'spotbugsMain',
+    'spotbugsTest',
+    'test',
+    'jacocoTestReport'
+  )
 }
 
 tasks.named("compileJava") {
