@@ -1,4 +1,4 @@
-///*
+/// *
 // * Copyright 2012-2025 the original author or authors.
 // *
 // * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,48 +14,48 @@
 // * limitations under the License.
 // */
 //
-//package org.springframework.samples.petclinic;
+// package org.springframework.samples.petclinic;
 //
-//import static org.assertj.core.api.Assertions.assertThat;
-//import static org.junit.jupiter.api.Assertions.assertNotNull;
-//import static org.junit.jupiter.api.Assumptions.assumeTrue;
+// import static org.assertj.core.api.Assertions.assertThat;
+// import static org.junit.jupiter.api.Assertions.assertNotNull;
+// import static org.junit.jupiter.api.Assumptions.assumeTrue;
 //
-//import java.util.Arrays;
-//import java.util.LinkedList;
-//import java.util.List;
-//import org.apache.commons.logging.Log;
-//import org.apache.commons.logging.LogFactory;
-//import org.junit.jupiter.api.BeforeAll;
-//import org.junit.jupiter.api.Test;
-//import org.junit.jupiter.api.condition.DisabledInNativeImage;
-//import org.springframework.beans.factory.annotation.Autowired;
-//import org.springframework.boot.builder.SpringApplicationBuilder;
-//import org.springframework.boot.context.event.ApplicationPreparedEvent;
-//import org.springframework.boot.test.context.SpringBootTest;
-//import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
-//import org.springframework.boot.test.web.server.LocalServerPort;
-//import org.springframework.boot.web.client.RestTemplateBuilder;
-//import org.springframework.context.ApplicationListener;
-//import org.springframework.core.env.ConfigurableEnvironment;
-//import org.springframework.core.env.EnumerablePropertySource;
-//import org.springframework.core.env.PropertySource;
-//import org.springframework.http.HttpStatus;
-//import org.springframework.http.RequestEntity;
-//import org.springframework.http.ResponseEntity;
-//import org.springframework.samples.petclinic.vet.VetRepository;
-//import org.springframework.test.context.ActiveProfiles;
-//import org.springframework.web.client.RestTemplate;
-//import org.testcontainers.DockerClientFactory;
+// import java.util.Arrays;
+// import java.util.LinkedList;
+// import java.util.List;
+// import org.apache.commons.logging.Log;
+// import org.apache.commons.logging.LogFactory;
+// import org.junit.jupiter.api.BeforeAll;
+// import org.junit.jupiter.api.Test;
+// import org.junit.jupiter.api.condition.DisabledInNativeImage;
+// import org.springframework.beans.factory.annotation.Autowired;
+// import org.springframework.boot.builder.SpringApplicationBuilder;
+// import org.springframework.boot.context.event.ApplicationPreparedEvent;
+// import org.springframework.boot.test.context.SpringBootTest;
+// import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
+// import org.springframework.boot.test.web.server.LocalServerPort;
+// import org.springframework.boot.web.client.RestTemplateBuilder;
+// import org.springframework.context.ApplicationListener;
+// import org.springframework.core.env.ConfigurableEnvironment;
+// import org.springframework.core.env.EnumerablePropertySource;
+// import org.springframework.core.env.PropertySource;
+// import org.springframework.http.HttpStatus;
+// import org.springframework.http.RequestEntity;
+// import org.springframework.http.ResponseEntity;
+// import org.springframework.samples.petclinic.vet.VetRepository;
+// import org.springframework.test.context.ActiveProfiles;
+// import org.springframework.web.client.RestTemplate;
+// import org.testcontainers.DockerClientFactory;
 //
-//@SpringBootTest(
+// @SpringBootTest(
 //    webEnvironment = WebEnvironment.RANDOM_PORT,
 //    properties = {
 //      "spring.docker.compose.skip.in-tests=false", //
 //      "spring.docker.compose.start.arguments=--force-recreate,--renew-anon-volumes,postgres"
 //    })
-//@ActiveProfiles("postgres")
-//@DisabledInNativeImage
-//public class PostgresIntegrationTests {
+// @ActiveProfiles("postgres")
+// @DisabledInNativeImage
+// public class PostgresIntegrationTests {
 //
 //  @LocalServerPort int port;
 //
@@ -145,4 +145,4 @@
 //      return sources;
 //    }
 //  }
-//}
+// }
