@@ -1,0 +1,113 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches:
+      - develop
+  pull_request:
+
+jobs:
+  # 1) Lint / Format backend
+  lint-backend:
+    name: Lint & Format Backend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      # Cache de Gradle o Maven
+      - name: Cache Gradle
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Setup JDK
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+
+      - name: Run Lint/Format
+        run: |
+          # Ajusta si usas Spotless o Checkstyle
+          ./gradlew spotlessCheck
+
+  # 2) Análisis estático del backend
+  static-analysis-backend:
+    name: Static Analysis Backend
+    runs-on: ubuntu-latest
+    needs: lint-backend
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup JDK
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+
+      - name: Run SpotBugs (estático)
+        run: |
+          ./gradlew spotBugsMain
+
+  # 3) Tests backend con PostgreSQL real
+  test-backend:
+    name: Test Backend with PostgreSQL
+    runs-on: ubuntu-latest
+    needs: static-analysis-backend
+    services:
+      postgres:
+        image: postgres:13
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: testdb
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup JDK
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+
+      - name: Run tests
+        env:
+          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/testdb
+          SPRING_DATASOURCE_USERNAME: test
+          SPRING_DATASOURCE_PASSWORD: test
+        run: |
+          ./gradlew test
+
+  # Placeholder: Lint frontend (si se agrega frontend luego)
+  lint-frontend:
+    name: Lint Frontend
+    runs-on: ubuntu-latest
+    steps:
+      - name: Skipped (no frontend detected)
+        run: echo "No frontend code to lint"
+
+  # Placeholder: Tests frontend
+  test-frontend:
+    name: Test Frontend
+    runs-on: ubuntu-latest
+    steps:
+      - name: Skipped (no frontend detected)
+        run: echo "No frontend code to test"
+
+  # Placeholder: Build frontend
+  build-frontend:
+    name: Build Frontend
+    runs-on: ubuntu-latest
+    steps:
+      - name: Skipped (no frontend detected)
+        run: echo "No frontend to build"
