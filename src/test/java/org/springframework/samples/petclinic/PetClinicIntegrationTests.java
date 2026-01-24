@@ -1,4 +1,4 @@
-///*
+/// *
 // * Copyright 2012-2025 the original author or authors.
 // *
 // * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,25 +14,25 @@
 // * limitations under the License.
 // */
 //
-//package org.springframework.samples.petclinic;
+// package org.springframework.samples.petclinic;
 //
-//import static org.assertj.core.api.Assertions.assertThat;
+// import static org.assertj.core.api.Assertions.assertThat;
 //
-//import org.junit.jupiter.api.Test;
-//import org.springframework.beans.factory.annotation.Autowired;
-//import org.springframework.boot.SpringApplication;
-//import org.springframework.boot.test.context.SpringBootTest;
-//import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
-//import org.springframework.boot.test.web.server.LocalServerPort;
-//import org.springframework.boot.web.client.RestTemplateBuilder;
-//import org.springframework.http.HttpStatus;
-//import org.springframework.http.RequestEntity;
-//import org.springframework.http.ResponseEntity;
-//import org.springframework.samples.petclinic.vet.VetRepository;
-//import org.springframework.web.client.RestTemplate;
+// import org.junit.jupiter.api.Test;
+// import org.springframework.beans.factory.annotation.Autowired;
+// import org.springframework.boot.SpringApplication;
+// import org.springframework.boot.test.context.SpringBootTest;
+// import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
+// import org.springframework.boot.test.web.server.LocalServerPort;
+// import org.springframework.boot.web.client.RestTemplateBuilder;
+// import org.springframework.http.HttpStatus;
+// import org.springframework.http.RequestEntity;
+// import org.springframework.http.ResponseEntity;
+// import org.springframework.samples.petclinic.vet.VetRepository;
+// import org.springframework.web.client.RestTemplate;
 //
-//@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
-//public class PetClinicIntegrationTests {
+// @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
+// public class PetClinicIntegrationTests {
 //
 //  @LocalServerPort int port;
 //
@@ -57,4 +57,4 @@
 //  public static void main(String[] args) {
 //    SpringApplication.run(PetClinicApplication.class, args);
 //  }
-//}
+// }

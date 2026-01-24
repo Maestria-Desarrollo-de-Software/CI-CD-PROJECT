@@ -1,4 +1,4 @@
-///*
+/// *
 // * Copyright 2012-2025 the original author or authors.
 // *
 // * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,44 +14,44 @@
 // * limitations under the License.
 // */
 //
-//package org.springframework.samples.petclinic.system;
+// package org.springframework.samples.petclinic.system;
 //
-//import static org.assertj.core.api.Assertions.assertThat;
-//import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
+// import static org.assertj.core.api.Assertions.assertThat;
+// import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 //
-//import java.util.List;
-//import java.util.Map;
-//import org.junit.jupiter.api.Test;
-//import org.springframework.beans.factory.annotation.Autowired;
-//import org.springframework.beans.factory.annotation.Value;
-//import org.springframework.boot.autoconfigure.SpringBootApplication;
-//import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
-//import org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration;
-//import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
-//import org.springframework.boot.test.context.SpringBootTest;
-//import org.springframework.boot.test.web.client.TestRestTemplate;
-//import org.springframework.core.ParameterizedTypeReference;
-//import org.springframework.http.HttpEntity;
-//import org.springframework.http.HttpHeaders;
-//import org.springframework.http.HttpMethod;
-//import org.springframework.http.HttpStatus;
-//import org.springframework.http.MediaType;
-//import org.springframework.http.RequestEntity;
-//import org.springframework.http.ResponseEntity;
+// import java.util.List;
+// import java.util.Map;
+// import org.junit.jupiter.api.Test;
+// import org.springframework.beans.factory.annotation.Autowired;
+// import org.springframework.beans.factory.annotation.Value;
+// import org.springframework.boot.autoconfigure.SpringBootApplication;
+// import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
+// import org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration;
+// import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
+// import org.springframework.boot.test.context.SpringBootTest;
+// import org.springframework.boot.test.web.client.TestRestTemplate;
+// import org.springframework.core.ParameterizedTypeReference;
+// import org.springframework.http.HttpEntity;
+// import org.springframework.http.HttpHeaders;
+// import org.springframework.http.HttpMethod;
+// import org.springframework.http.HttpStatus;
+// import org.springframework.http.MediaType;
+// import org.springframework.http.RequestEntity;
+// import org.springframework.http.ResponseEntity;
 //
-///**
+/// **
 // * Integration Test for {@link CrashController}.
 // *
 // * @author Alex Lutz
 // */
 //// NOT Waiting https://github.com/spring-projects/spring-boot/issues/5574
-//@SpringBootTest(
+// @SpringBootTest(
 //    webEnvironment = RANDOM_PORT,
 //    properties = {
 //      "spring.web.error.include-message=ALWAYS",
 //      "management.endpoints.access.default=none"
 //    })
-//class CrashControllerIntegrationTests {
+// class CrashControllerIntegrationTests {
 //
 //  @Value(value = "${local.server.port}")
 //  private int port;
@@ -123,4 +123,4 @@
 //        HibernateJpaAutoConfiguration.class
 //      })
 //  static class TestConfiguration {}
-//}
+// }

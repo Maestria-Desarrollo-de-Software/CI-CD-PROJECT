@@ -1,4 +1,4 @@
-///*
+/// *
 // * Copyright 2012-2025 the original author or authors.
 // *
 // * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,40 +14,43 @@
 // * limitations under the License.
 // */
 //
-//package org.springframework.samples.petclinic.service;
+// package org.springframework.samples.petclinic.service;
 //
-//import static org.assertj.core.api.Assertions.assertThat;
+// import static org.assertj.core.api.Assertions.assertThat;
 //
-//import java.time.LocalDate;
-//import java.util.Collection;
-//import java.util.Optional;
-//import org.junit.jupiter.api.Test;
-//import org.springframework.beans.factory.annotation.Autowired;
-//import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
-//import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-//import org.springframework.data.domain.Page;
-//import org.springframework.data.domain.Pageable;
-//import org.springframework.samples.petclinic.owner.Owner;
-//import org.springframework.samples.petclinic.owner.OwnerRepository;
-//import org.springframework.samples.petclinic.owner.Pet;
-//import org.springframework.samples.petclinic.owner.PetType;
-//import org.springframework.samples.petclinic.owner.PetTypeRepository;
-//import org.springframework.samples.petclinic.owner.Visit;
-//import org.springframework.samples.petclinic.vet.Vet;
-//import org.springframework.samples.petclinic.vet.VetRepository;
-//import org.springframework.transaction.annotation.Transactional;
+// import java.time.LocalDate;
+// import java.util.Collection;
+// import java.util.Optional;
+// import org.junit.jupiter.api.Test;
+// import org.springframework.beans.factory.annotation.Autowired;
+// import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+// import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+// import org.springframework.data.domain.Page;
+// import org.springframework.data.domain.Pageable;
+// import org.springframework.samples.petclinic.owner.Owner;
+// import org.springframework.samples.petclinic.owner.OwnerRepository;
+// import org.springframework.samples.petclinic.owner.Pet;
+// import org.springframework.samples.petclinic.owner.PetType;
+// import org.springframework.samples.petclinic.owner.PetTypeRepository;
+// import org.springframework.samples.petclinic.owner.Visit;
+// import org.springframework.samples.petclinic.vet.Vet;
+// import org.springframework.samples.petclinic.vet.VetRepository;
+// import org.springframework.transaction.annotation.Transactional;
 //
-///**
+/// **
 // * Integration test of the Service and the Repository layer.
 // *
-// * <p>ClinicServiceSpringDataJpaTests subclasses benefit from the following services provided by the
+// * <p>ClinicServiceSpringDataJpaTests subclasses benefit from the following services provided by
+// the
 // * Spring TestContext Framework:
 // *
 // * <ul>
 // *   <li><strong>Spring IoC container caching</strong> which spares us unnecessary set up time
 // *       between test execution.
-// *   <li><strong>Dependency Injection</strong> of test fixture instances, meaning that we don't need
-// *       to perform application context lookups. See the use of {@link Autowired @Autowired} on the
+// *   <li><strong>Dependency Injection</strong> of test fixture instances, meaning that we don't
+// need
+// *       to perform application context lookups. See the use of {@link Autowired @Autowired} on
+// the
 // *       <code> </code> instance variable, which uses autowiring <em>by type</em>.
 // *   <li><strong>Transaction management</strong>, meaning each test method is executed in its own
 // *       transaction, which is automatically rolled back by default. Thus, even if tests insert or
@@ -63,11 +66,11 @@
 // * @author Michael Isvy
 // * @author Dave Syer
 // */
-//@DataJpaTest
+// @DataJpaTest
 //// Ensure that if the mysql profile is active we connect to the real database:
-//@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
+// @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 //// @TestPropertySource("/application-postgres.properties")
-//class ClinicServiceTests {
+// class ClinicServiceTests {
 //
 //  @Autowired protected OwnerRepository owners;
 //
@@ -240,4 +243,4 @@
 //        .extracting(Visit::getDate)
 //        .isNotNull();
 //  }
-//}
+// }
