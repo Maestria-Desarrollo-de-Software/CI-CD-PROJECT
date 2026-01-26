@@ -142,7 +142,7 @@ jobs:
   deploy-production:
     name: Deploy Production
     runs-on: [self-hosted, production]
-    needs: test-backend
+    needs: deploy-staging
     if: github.ref == 'refs/heads/main'
     environment: production
   
