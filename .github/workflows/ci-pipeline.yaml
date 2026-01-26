@@ -8,7 +8,7 @@ on:
 
 jobs:
 
-  # CD - STAGING
+  # CD - STAGING1
   deploy-staging:
     name: Deploy Staging
     runs-on: [self-hosted, staging]
