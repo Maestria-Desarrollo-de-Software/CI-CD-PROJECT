@@ -44,7 +44,7 @@ jobs:
           cache: 'gradle'
 
       - name: Make gradlew executable
-      - run: chmod +x gradlew
+        run: chmod +x gradlew
 
       - name: Format/Lint (Spotless)
         run: ./gradlew spotlesscheck
@@ -67,7 +67,7 @@ jobs:
 
   deploy_staging:
     name: CD - Deploy to Staging
-    runs-on: [self-hosted, staging]
+    runs-on: [ self-hosted, staging ]
     needs: ci
     if: github.ref == 'refs/heads/develop'
     environment: staging
