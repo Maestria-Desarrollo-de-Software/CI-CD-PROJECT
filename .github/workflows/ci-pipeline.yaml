@@ -58,9 +58,7 @@ jobs:
           mv $JAR_SOURCE $DEPLOY_DIR/$JAR_NAME
           mv .env $DEPLOY_DIR/.env
   
-          sudo systemctl stop petclinic-staging.service
-          sudo systemctl start petclinic-staging.service
-          sudo systemctl status petclinic-staging.service
+          sudo systemctl restart petclinic-staging.service
 
   # CD - PRODUCTION
   deploy-production:
