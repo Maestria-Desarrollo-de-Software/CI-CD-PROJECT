@@ -124,19 +124,50 @@ jobs:
     needs: test-backend
     if: github.ref == 'refs/heads/develop'
     environment: staging
-  
+    
     steps:
       - uses: actions/checkout@v4
+    
+      # Paso 1: Configurar el ambiente Java en el runner
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17' # Asegúrate de que sea la versión correcta de tu proyecto
+          distribution: 'temurin'
+          cache: 'maven'
   
+      # Paso 2: Compilar el proyecto y generar el .jar
+      - name: Build with Maven
+        run: mvn clean install -DskipTests # Esto crea el JAR en la carpeta 'target/'
+  
+      # Paso 3: Crear el archivo .env (Tu paso original)
       - name: Create env file
         run: |
           echo "DB_USER=${{ secrets.DB_USER }}" >> .env
           echo "DB_PASS=${{ secrets.DB_PASS }}" >> .env
           echo "SPRING_PROFILES_ACTIVE=staging" >> .env
+          # NOTA: Este .env debe estar en la misma carpeta donde ejecutas el JAR
   
-      - name: Deploy
+      # Paso 4: Desplegar usando comandos locales de Linux
+      - name: Deploy and restart application
         run: |
-          docker compose up -d --build
+          # Define la ruta de destino en tu servidor
+          DEPLOY_DIR="/var/www/petclinic-staging/releases/"
+          JAR_NAME="petclinic.jar" # Reemplaza con el nombre exacto de tu JAR
+  
+          # Asegúrate de que la carpeta de destino exista
+          mkdir -p $DEPLOY_DIR
+  
+          # Mueve el JAR compilado a la carpeta de destino
+          mv target/$JAR_NAME $DEPLOY_DIR/$JAR_NAME
+          
+          # Mueve el archivo .env a la carpeta de destino
+          mv .env $DEPLOY_DIR/.env
+  
+          # Reinicia el servicio de systemd (requiere configuración previa del servicio)
+          #sudo systemctl stop tu-app-staging.service
+          #sudo systemctl start tu-app-staging.service
+          #sudo systemctl status tu-app-staging.service
 
   # CD - PRODUCTION
   deploy-production:
