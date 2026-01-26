@@ -50,7 +50,7 @@ jobs:
         run: ./gradlew spotlesscheck
 
       - name: Static Anaysis (Checkstyle + Spotbugs)
-        run: ./gradlew checkstyleMain checkstyleTest spotBugsMain spotBugsTest
+        run: ./gradlew checkstyleMain checkstyleTest spotbugsMain spotbugsTest
 
       - name: Tests + Coverage (Jacoco)
         run: ./gradlew test jacocoTestReport
