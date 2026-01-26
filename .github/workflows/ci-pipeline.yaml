@@ -134,37 +134,40 @@ jobs:
         with:
           java-version: '17' # Asegúrate de que sea la versión correcta de tu proyecto
           distribution: 'temurin'
-          cache: 'maven'
+          cache: 'gradle'
   
       # Paso 2: Compilar el proyecto y generar el .jar
-      - name: Build with Maven
-        run: mvn clean install -DskipTests # Esto crea el JAR en la carpeta 'target/'
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
   
-      # Paso 3: Crear el archivo .env (Tu paso original)
+      # Paso 3: Compilar el proyecto con Gradle
+      # Esto genera el JAR en 'build/libs/' en lugar de 'target/'
+      - name: Build with Gradle
+        run: ./gradlew bootJar -x test
+  
+      # Paso 4: Crear el archivo .env
       - name: Create env file
         run: |
           echo "DB_USER=${{ secrets.DB_USER }}" >> .env
           echo "DB_PASS=${{ secrets.DB_PASS }}" >> .env
           echo "SPRING_PROFILES_ACTIVE=staging" >> .env
-          # NOTA: Este .env debe estar en la misma carpeta donde ejecutas el JAR
   
-      # Paso 4: Desplegar usando comandos locales de Linux
+      # Paso 5: Desplegar usando rutas de Gradle
       - name: Deploy and restart application
         run: |
-          # Define la ruta de destino en tu servidor
           DEPLOY_DIR="/var/www/petclinic-staging/releases/"
-          JAR_NAME="petclinic.jar" # Reemplaza con el nombre exacto de tu JAR
+          
+          # Gradle pone los JARs en build/libs/
+          # Usamos un wildcard (*) para capturar el nombre, o pon el nombre exacto
+          JAR_SOURCE=$(ls build/libs/*.jar | head -n 1)
+          JAR_NAME="petclinic.jar"
   
-          # Asegúrate de que la carpeta de destino exista
           mkdir -p $DEPLOY_DIR
   
-          # Mueve el JAR compilado a la carpeta de destino
-          mv target/$JAR_NAME $DEPLOY_DIR/$JAR_NAME
-          
-          # Mueve el archivo .env a la carpeta de destino
+          # Mover el archivo generado desde la ruta de Gradle
+          mv $JAR_SOURCE $DEPLOY_DIR/$JAR_NAME
           mv .env $DEPLOY_DIR/.env
   
-          # Reinicia el servicio de systemd (requiere configuración previa del servicio)
           sudo systemctl stop petclinic-staging.service
           sudo systemctl start petclinic-staging.service
           sudo systemctl status petclinic-staging.service
