@@ -45,7 +45,7 @@ jobs:
         run: chmod +x gradlew
 
       - name: Format/Lint (Spotless)
-        run: ./gradlew spotlesscheck
+        run: ./gradlew spotlessCheck
 
       - name: Static Anaysis (Checkstyle + Spotbugs)
         run: ./gradlew checkstyleMain checkstyleTest spotbugsMain spotbugsTest
@@ -67,7 +67,7 @@ jobs:
     name: CD - Deploy to Staging
     runs-on: [ self-hosted, staging ]
     needs: ci
-    if: github.ref == 'refs/heads/continousdeployment'
+    if: github.ref == 'refs/heads/continuousdeployment'
     environment: staging
 
     steps:
@@ -82,7 +82,7 @@ jobs:
       - name: Deploy (atomic symlink + restart + healthcheck)
         shell: bash
         run: |
-          set euo pipefail
+          set -euo pipefail
           APP_ROOT="/var/www/petclinic-staging"
           RELEASE_ID=${GITHUB_SHA}
           RELEASE_DIR="${APP_ROOT}/releases/${RELEASE_ID}"
