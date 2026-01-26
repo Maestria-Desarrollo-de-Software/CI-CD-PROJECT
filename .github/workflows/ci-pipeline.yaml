@@ -73,13 +73,48 @@ jobs:
   
     steps:
       - uses: actions/checkout@v4
+    
+      # Paso 1: Configurar el ambiente Java en el runner
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17' # Asegúrate de que sea la versión correcta de tu proyecto
+          distribution: 'temurin'
+          cache: 'gradle'
   
+      # Paso 2: Compilar el proyecto y generar el .jar
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+  
+      # Paso 3: Compilar el proyecto con Gradle
+      # Esto genera el JAR en 'build/libs/' en lugar de 'target/'
+      - name: Build with Gradle
+        run: ./gradlew bootJar -x test
+  
+      # Paso 4: Crear el archivo .env
       - name: Create env file
         run: |
           echo "DB_USER=${{ secrets.DB_USER }}" >> .env
           echo "DB_PASS=${{ secrets.DB_PASS }}" >> .env
-          echo "SPRING_PROFILES_ACTIVE=production" >> .env
+          echo "DB_HOST=${{ secrets.DB_HOST }}" >> .env
+          echo "DB_PORT=${{ secrets.DB_PORT }}" >> .env
+          echo "DB_NAME=${{ secrets.DB_NAME }}" >> .env
+          echo "SPRING_PROFILES_ACTIVE=staging" >> .env
   
-      - name: Deploy
+      # Paso 5: Desplegar usando rutas de Gradle
+      - name: Deploy and restart application
         run: |
-          docker compose up -d --build 
+          DEPLOY_DIR="/var/www/petclinic-prod/releases/"
+          
+          # Gradle pone los JARs en build/libs/
+          # Usamos un wildcard (*) para capturar el nombre, o pon el nombre exacto
+          JAR_SOURCE=$(ls build/libs/*.jar | head -n 1)
+          JAR_NAME="petclinic.jar"
+  
+          mkdir -p $DEPLOY_DIR
+  
+          # Mover el archivo generado desde la ruta de Gradle
+          mv $JAR_SOURCE $DEPLOY_DIR/$JAR_NAME
+          mv .env $DEPLOY_DIR/.env
+  
+          sudo systemctl restart petclinic-staging.service &
