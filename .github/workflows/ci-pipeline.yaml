@@ -116,3 +116,45 @@ jobs:
     steps:
       - name: Skipped (no frontend detected)
         run: echo "No frontend to build"
+
+  # CD - STAGING
+  deploy-staging:
+    name: Deploy Staging
+    runs-on: [self-hosted, staging]
+    needs: test-backend
+    if: github.ref == 'refs/heads/develop'
+    environment: staging
+  
+    steps:
+      - uses: actions/checkout@v4
+  
+      - name: Create env file
+        run: |
+          echo "DB_USER=${{ secrets.DB_USER }}" >> .env
+          echo "DB_PASS=${{ secrets.DB_PASS }}" >> .env
+          echo "SPRING_PROFILES_ACTIVE=staging" >> .env
+  
+      - name: Deploy
+        run: |
+          docker compose up -d --build
+
+  # CD - PRODUCTION
+  deploy-production:
+    name: Deploy Production
+    runs-on: [self-hosted, production]
+    needs: test-backend
+    if: github.ref == 'refs/heads/main'
+    environment: production
+  
+    steps:
+      - uses: actions/checkout@v4
+  
+      - name: Create env file
+        run: |
+          echo "DB_USER=${{ secrets.DB_USER }}" >> .env
+          echo "DB_PASS=${{ secrets.DB_PASS }}" >> .env
+          echo "SPRING_PROFILES_ACTIVE=production" >> .env
+  
+      - name: Deploy
+        run: |
+          docker compose up -d --build 
