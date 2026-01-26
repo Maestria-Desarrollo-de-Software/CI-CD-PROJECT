@@ -84,16 +84,18 @@ jobs:
         run: |
           set -euo pipefail
           APP_ROOT="/var/www/petclinic-staging"
-          RELEASE_ID=${GITHUB_SHA}
+          RELEASE_ID="${GITHUB_SHA}"
           RELEASE_DIR="${APP_ROOT}/releases/${RELEASE_ID}"
           
-          JAR_SOURCE="$(ls ./artifact/*.jar | head -n 1)"
+          JAR_SOURCE="$(find ./artifact -name "*.jar" | head -n 1)"
+          test -n "$JAR_SOURCE"
+          echo "JAR_SOURCE=$JAR_SOURCE"
           
           sudo mkdir -p "${RELEASE_DIR}"
           sudo cp "${JAR_SOURCE}" "${RELEASE_DIR}/app.jar"
           sudo ln -sfn "${RELEASE_DIR}" "${APP_ROOT}/current"
           
-          sudo systemctl restart petclinic-staging.service --no-block
+          sudo systemctl restart petclinic-staging --no-block
           
           for i in {1..30}; do
             if curl -fsS "http://127.0.0.1:8081/api/health" >/dev/null; then
