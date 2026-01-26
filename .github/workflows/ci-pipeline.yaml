@@ -106,7 +106,13 @@ jobs:
             sleep 2
           done
 
-          echo "Healthcheck FAILED. Logs:"
-          sudo journalctl -u petclinic-staging -n 200 --no-pager || true
+          echo "Healthcheck FAILED. Service status:"
+          sudo systemctl status petclinic-staging --no-pager -l || true
+  
+          echo "Last logs:"
+          sudo journalctl -u petclinic-staging -n 200 --no-pager -l || true
+  
+          echo "Listening ports:"
+          sudo ss -lntp | grep java || true
           
           exit 1
