@@ -165,9 +165,9 @@ jobs:
           mv .env $DEPLOY_DIR/.env
   
           # Reinicia el servicio de systemd (requiere configuración previa del servicio)
-          #sudo systemctl stop tu-app-staging.service
-          #sudo systemctl start tu-app-staging.service
-          #sudo systemctl status tu-app-staging.service
+          sudo systemctl stop petclinic-staging.service
+          sudo systemctl start petclinic-staging.service
+          sudo systemctl status petclinic-staging.service
 
   # CD - PRODUCTION
   deploy-production:
