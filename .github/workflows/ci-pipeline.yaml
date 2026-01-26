@@ -3,10 +3,8 @@ name: CI Pipeline
 on:
   pull_request:
   push:
-    branches:
-      - continousdeployment
-    tags: [ "v*" ]
-
+  workflow_dispatch:
+  
 jobs:
   ci:
     name: CI - Quality Gates + Tests + Build
