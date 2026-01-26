@@ -108,4 +108,5 @@ jobs:
 
           echo "Healthcheck FAILED. Logs:"
           sudo journalctl -u petclinic-staging -n 200 --no-pager || true
+          
           exit 1
