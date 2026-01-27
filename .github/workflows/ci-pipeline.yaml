@@ -98,13 +98,14 @@ jobs:
           sudo systemctl restart petclinic-staging
           sudo systemctl is-active --quiet petclinic-staging
           
-          for i in {1..30}; do
-            if curl -fsS "http://127.0.0.1:8081/api/health" >/dev/null; then
-              echo "STAGING OK"
-              exit 0
-            fi
-            echo "Waiting health... ($i/30)"
-            sleep 2
+          for i in {1..90}; do
+          code=$(curl -s -o /dev/null -w "%{http_code}" "http://127.0.0.1:8081/api/health" || true)
+          echo "Health attempt $i/90 -> HTTP $code"
+          if [ "$code" = "200" ]; then
+          echo "STAGING OK"
+          exit 0
+          fi
+          sleep 2
           done
 
           echo "Healthcheck FAILED. Service status:"
