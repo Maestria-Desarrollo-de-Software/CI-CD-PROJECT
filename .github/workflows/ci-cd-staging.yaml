@@ -1,10 +1,10 @@
-name: CI/CD Pipeline
+name: CI
 
 on:
   push:
     branches:
       - develop
-      - main
+      - dev-ci-cd
     tags:
       - "v*"
   pull_request:
