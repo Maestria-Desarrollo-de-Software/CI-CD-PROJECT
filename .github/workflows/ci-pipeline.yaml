@@ -133,3 +133,59 @@ jobs:
         with:
            name: gradle-problems-report
            path: build/reports/problems/
+           
+  deploy_production:
+    name: CD - Deploy to Production
+    runs-on: [ self-hosted, production ]
+    if: github.ref == 'refs/heads/main' 
+    environment: production
+    
+    steps:
+      - name: Download JAR artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: petclinic-jar
+          path: ./artifact
+
+      - name: Deploy to Production (atomic symlink + rollback + healthcheck)
+        shell: bash
+        run: |
+          set -euxo pipefail
+
+          APP_ROOT="/var/www/petclinic"
+          RELEASE_ID="${GITHUB_SHA}"
+          RELEASE_DIR="${APP_ROOT}/releases/${RELEASE_ID}"
+          CURRENT_LINK="${APP_ROOT}/current"
+          PREVIOUS_RELEASE="$(readlink -f ${CURRENT_LINK} || true)"
+
+          JAR_SOURCE="$(find ./artifact -name "*.jar" | head -n 1)"
+          test -n "${JAR_SOURCE}"
+
+          sudo -n mkdir -p "${RELEASE_DIR}"
+          sudo -n cp "${JAR_SOURCE}" "${RELEASE_DIR}/app.jar"
+
+          # Switch atomico
+          sudo -n ln -sfn "${RELEASE_DIR}" "${CURRENT_LINK}"
+
+          sudo -n systemctl restart petclinic
+
+          HOST_IP="$(hostname -I | awk '{print $1}')"
+
+          for i in $(seq 1 90); do
+            code="$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 2 --max-time 5 "http://${HOST_IP}:8080/api/health" || true)"
+            echo "Health attempt ${i}/90 -> HTTP ${code}"
+            if [ "${code}" = "200" ]; then
+              echo "PRODUCTION OK"
+              exit 0
+            fi
+            sleep 2
+          done
+
+          echo "Healthcheck FAILED - rolling back"
+
+          if [ -n "${PREVIOUS_RELEASE}" ]; then
+            sudo -n ln -sfn "${PREVIOUS_RELEASE}" "${CURRENT_LINK}"
+            sudo -n systemctl restart petclinic
+          fi
+
+          exit 1
