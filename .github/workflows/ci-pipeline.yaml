@@ -137,7 +137,8 @@ jobs:
   deploy_production:
     name: CD - Deploy to Production
     runs-on: [ self-hosted, production ]
-    if: github.ref == 'refs/heads/main' 
+    needs: ci
+    if: startsWith(github.ref, 'refs/tags/v')
     environment: production
     
     steps:
@@ -152,22 +153,24 @@ jobs:
         run: |
           set -euxo pipefail
 
-          APP_ROOT="/var/www/petclinic"
-          RELEASE_ID="${GITHUB_SHA}"
+          APP_ROOT="/var/www/petclinic-prod"
+          RELEASE_ID="${{ needs.ci.outputs.release_id }}"
           RELEASE_DIR="${APP_ROOT}/releases/${RELEASE_ID}"
-          CURRENT_LINK="${APP_ROOT}/current"
-          PREVIOUS_RELEASE="$(readlink -f ${CURRENT_LINK} || true)"
+          
+          PREV="$(readlink -f "${APP_ROOT}/current" 2>/dev/null || true)"
+          echo "PREV=${PREV}"
 
           JAR_SOURCE="$(find ./artifact -name "*.jar" | head -n 1)"
           test -n "${JAR_SOURCE}"
+          echo "JAR_SOURCE=${JAR_SOURCE}"
 
           sudo -n mkdir -p "${RELEASE_DIR}"
           sudo -n cp "${JAR_SOURCE}" "${RELEASE_DIR}/app.jar"
 
           # Switch atomico
-          sudo -n ln -sfn "${RELEASE_DIR}" "${CURRENT_LINK}"
+          sudo -n ln -sfn "${RELEASE_DIR}" "${APP_ROOT}/current"
 
-          sudo -n systemctl restart petclinic
+          sudo -n systemctl restart petclinic-prod
 
           HOST_IP="$(hostname -I | awk '{print $1}')"
 
@@ -183,9 +186,15 @@ jobs:
 
           echo "Healthcheck FAILED - rolling back"
 
-          if [ -n "${PREVIOUS_RELEASE}" ]; then
-            sudo -n ln -sfn "${PREVIOUS_RELEASE}" "${CURRENT_LINK}"
-            sudo -n systemctl restart petclinic
+          if [ -n "${PREV}" ] && [ -d "${PREV}" ]; then
+            sudo -n ln -sfn "${PREV}" "${APP_ROOT}/current"
+            sudo -n systemctl restart petclinic-prod
+            echo "Rollback applied to ${PREV}"
+          else
+            echo "No previous release found to rollback"
           fi
+          
+          sudo -n systemctl status petclinic-prod --no-pager -l || true
+          sudo -n journalctl -u petclinic-prod -n 200 --no-pager -l || true
 
           exit 1
