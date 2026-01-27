@@ -69,9 +69,11 @@ jobs:
         run: |
           set -euo pipefail
           if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
-            echo "release_id=${GITHUB_REF#refs/tags/}" >> "$GITHUB_OUTPUT"
-          else
-            echo "release_id=${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+          echo "release_id=${GITHUB_REF#refs/tags/}" >> "$GITHUB_OUTPUT"
+          elsE
+          SHORT_SHA="$(echo "${GITHUB_SHA}" | cut -c1-8)"
+          TS="$(date -u +'%Y%m%d-%H%M%S')"
+          echo "release_id=${TS}-${SHORT_SHA}" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Upload JAR artifact
