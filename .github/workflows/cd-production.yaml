@@ -2,6 +2,10 @@ name: CD - Deploy Production
 
 on:
   workflow_run:
-
+    workflows: ["CI/CD Staging"] 
+    branches: [dev-ci-cd]
+    types:
+      - completed
+      
 jobs:
   # ... (resto de tu pipeline)
