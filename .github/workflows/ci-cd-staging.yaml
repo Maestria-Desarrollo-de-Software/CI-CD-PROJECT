@@ -100,7 +100,7 @@ jobs:
     name: CD - Deploy to Staging
     runs-on: [ self-hosted, staging ]
     needs: ci
-    if: github.ref == 'refs/heads/develop'
+    if: github.ref == 'refs/heads/dev-ci-cd'
     environment: staging
 
     steps:
