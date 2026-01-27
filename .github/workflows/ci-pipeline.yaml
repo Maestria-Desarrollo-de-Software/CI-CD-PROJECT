@@ -2,9 +2,8 @@ name: CI + CD (Staging)
 
 on:
   push:
-    branches: [ "continuousdeployment" ]
+    branches: [ "develop" ]
   pull_request:
-  workflow_dispatch:
 
 jobs:
   ci:
@@ -68,7 +67,7 @@ jobs:
     name: CD - Deploy to Staging
     runs-on: [ self-hosted, staging ]
     needs: ci
-    if: github.ref == 'refs/heads/continuousdeployment'
+    if: github.ref == 'refs/heads/develop'
     environment: staging
 
     steps:
