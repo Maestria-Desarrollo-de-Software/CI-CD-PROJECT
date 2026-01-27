@@ -1,8 +1,10 @@
-name: CI + CD (Staging)
+name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ "develop" ]
+    branches:
+      - develop
+      - main
   pull_request:
 
 jobs:
