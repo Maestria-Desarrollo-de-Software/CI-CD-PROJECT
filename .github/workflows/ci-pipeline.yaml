@@ -95,7 +95,8 @@ jobs:
           sudo cp "${JAR_SOURCE}" "${RELEASE_DIR}/app.jar"
           sudo ln -sfn "${RELEASE_DIR}" "${APP_ROOT}/current"
           
-          sudo systemctl restart petclinic-staging --no-block
+          sudo systemctl restart petclinic-staging
+          sudo systemctl is-active --quiet petclinic-staging
           
           for i in {1..30}; do
             if curl -fsS "http://127.0.0.1:8081/api/health" >/dev/null; then
