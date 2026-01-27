@@ -9,8 +9,7 @@ on:
 
 jobs:
   deploy_production:
-    name: Deploy to Production
-    if: github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success'
+    name: Deploy to Production    
     runs-on: [self-hosted, production]
     environment: production
 
