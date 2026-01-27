@@ -82,7 +82,7 @@ jobs:
       - name: Deploy (atomic symlink + restart + healthcheck)
         shell: bash
         run: |
-          set -euo pipefail
+          set -euxo pipefail
           APP_ROOT="/var/www/petclinic-staging"
           RELEASE_ID="${GITHUB_SHA}"
           RELEASE_DIR="${APP_ROOT}/releases/${RELEASE_ID}"
@@ -91,12 +91,12 @@ jobs:
           test -n "$JAR_SOURCE"
           echo "JAR_SOURCE=$JAR_SOURCE"
           
-          sudo mkdir -p "${RELEASE_DIR}"
-          sudo cp "${JAR_SOURCE}" "${RELEASE_DIR}/app.jar"
-          sudo ln -sfn "${RELEASE_DIR}" "${APP_ROOT}/current"
+          sudo -n mkdir -p "${RELEASE_DIR}"
+          sudo -n cp "${JAR_SOURCE}" "${RELEASE_DIR}/app.jar"
+          sudo -n ln -sfn "${RELEASE_DIR}" "${APP_ROOT}/current"
           
-          sudo systemctl restart petclinic-staging
-          sudo systemctl is-active --quiet petclinic-staging
+          sudo -n systemctl restart petclinic-staging
+          sudo -n systemctl is-active --quiet petclinic-staging
           
           curl -v http://127.0.0.1:8081/api/health || true
 
@@ -111,12 +111,12 @@ jobs:
           done
 
           echo "Healthcheck FAILED. Service status:"
-          sudo systemctl status petclinic-staging --no-pager -l || true
+          sudo -n systemctl status petclinic-staging --no-pager -l || true
   
           echo "Last logs:"
-          sudo journalctl -u petclinic-staging -n 200 --no-pager -l || true
+          sudo -n journalctl -u petclinic-staging -n 200 --no-pager -l || true
   
           echo "Listening ports:"
-          sudo ss -lntp | grep java || true
+          sudo -n ss -lntp | grep java || true
           
           exit 1
