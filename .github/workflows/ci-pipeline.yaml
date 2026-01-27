@@ -1,10 +1,11 @@
-name: CI Pipeline
+name: CI + CD (Staging)
 
 on:
-  pull_request:
   push:
+    branches: [ "continuousdeployment" ]
+  pull_request:
   workflow_dispatch:
-  
+
 jobs:
   ci:
     name: CI - Quality Gates + Tests + Build
@@ -25,12 +26,12 @@ jobs:
           --health-interval=10s
           --health-timeout=5s
           --health-retries=15
+
     env:
       SPRING_PROFILES_ACTIVE: mysql
       SPRING_DATASOURCE_URL: jdbc:mysql://localhost:3306/petclinic?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
       SPRING_DATASOURCE_USERNAME: petclinic
       SPRING_DATASOURCE_PASSWORD: petclinic
-
 
     steps:
       - uses: actions/checkout@v4
@@ -39,7 +40,7 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
-          cache: 'gradle'
+          cache: gradle
 
       - name: Make gradlew executable
         run: chmod +x gradlew
@@ -47,16 +48,16 @@ jobs:
       - name: Format/Lint (Spotless)
         run: ./gradlew spotlessCheck
 
-      - name: Static Anaysis (Checkstyle + Spotbugs)
+      - name: Static Analysis (Checkstyle + SpotBugs)
         run: ./gradlew checkstyleMain checkstyleTest spotbugsMain spotbugsTest
 
-      - name: Tests + Coverage (Jacoco)
+      - name: Tests + Coverage (JaCoCo)
         run: ./gradlew test jacocoTestReport
 
-      - name: Build Artifact (bootJar)
+      - name: Build Artifact (bootJar) - build once
         run: ./gradlew bootJar -x test
 
-      - name: Upload JAR artifact (build once)
+      - name: Upload JAR artifact
         uses: actions/upload-artifact@v4
         with:
           name: petclinic-jar
@@ -71,8 +72,6 @@ jobs:
     environment: staging
 
     steps:
-      - uses: actions/checkout@v4
-
       - name: Download JAR artifact
         uses: actions/download-artifact@v4
         with:
@@ -83,37 +82,42 @@ jobs:
         shell: bash
         run: |
           set -euxo pipefail
+
           APP_ROOT="/var/www/petclinic-staging"
           RELEASE_ID="${GITHUB_SHA}"
           RELEASE_DIR="${APP_ROOT}/releases/${RELEASE_ID}"
-          
+
           JAR_SOURCE="$(find ./artifact -name "*.jar" | head -n 1)"
-          test -n "$JAR_SOURCE"
-          echo "JAR_SOURCE=$JAR_SOURCE"
-          
+          test -n "${JAR_SOURCE}"
+          echo "JAR_SOURCE=${JAR_SOURCE}"
+
           sudo -n mkdir -p "${RELEASE_DIR}"
           sudo -n cp "${JAR_SOURCE}" "${RELEASE_DIR}/app.jar"
-          sudo -n ln -sfn "${RELEASE_DIR}" "${APP_ROOT}/current"
-          
-          sudo -n systemctl --no-block restart petclinic-staging
 
-          for i in {1..90}; do
-          code=$(curl -s -o /dev/null -w "%{http_code}" "http://127.0.0.1:8081/api/health" || true)
-          echo "Health attempt $i/90 -> HTTP $code"
-          if [ "$code" = "200" ]; then
-          echo "STAGING OK"
-          exit 0
-          fi
-          sleep 2
+          # symlink atomico
+          sudo -n ln -sfn "${RELEASE_DIR}" "${APP_ROOT}/current"
+
+          # restart
+          sudo -n systemctl restart petclinic-staging
+
+          # espera + healthcheck (con timeout)
+          HOST_IP="$(hostname -I | awk '{print $1}')"
+          echo "HOST_IP=${HOST_IP}"
+
+          for i in $(seq 1 90); do
+            code="$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 2 --max-time 5 "http://${HOST_IP}:8081/api/health" || true)"
+            echo "Health attempt ${i}/90 -> HTTP ${code}"
+            if [ "${code}" = "200" ]; then
+              echo "STAGING OK"
+              exit 0
+            fi
+            sleep 2
           done
 
           echo "Healthcheck FAILED. Service status:"
           sudo -n systemctl status petclinic-staging --no-pager -l || true
-  
           echo "Last logs:"
           sudo -n journalctl -u petclinic-staging -n 200 --no-pager -l || true
-  
           echo "Listening ports:"
           sudo -n ss -lntp | grep java || true
-          
           exit 1
