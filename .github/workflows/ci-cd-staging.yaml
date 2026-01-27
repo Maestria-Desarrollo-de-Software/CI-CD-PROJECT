@@ -1,10 +1,10 @@
-name: CI/CD Pipeline
+name: CI/CD STAGING
 
 on:
   push:
     branches:
       - develop
-      - main
+      - dev-ci-cd
     tags:
       - "v*"
   pull_request:
@@ -71,8 +71,16 @@ jobs:
           if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
             echo "release_id=${GITHUB_REF#refs/tags/}" >> "$GITHUB_OUTPUT"
           else
-            echo "release_id=${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+            SHORT_SHA="${GITHUB_SHA:0:8}"
+            TS="$(date -u +'%Y%m%d-%H%M%S')"
+            echo "release_id=${TS}-${SHORT_SHA}" >> "$GITHUB_OUTPUT"
           fi
+                
+      - name: Debug release id
+        run: |
+          echo "release_id = ${{ steps.release.outputs.release_id }}"
+          echo "github_ref  = ${{ github.ref }}"
+          echo "github_sha  = ${{ github.sha }}"
 
       - name: Upload JAR artifact
         uses: actions/upload-artifact@v4
@@ -92,7 +100,7 @@ jobs:
     name: CD - Deploy to Staging
     runs-on: [ self-hosted, staging ]
     needs: ci
-    if: github.ref == 'refs/heads/develop'
+    if: github.ref == 'refs/heads/dev-ci-cd'
     environment: staging
 
     steps:
@@ -152,68 +160,3 @@ jobs:
         with:
            name: gradle-problems-report
            path: build/reports/problems/
-           
-  deploy_production:
-    name: CD - Deploy to Production
-    runs-on: [ self-hosted, production ]
-    needs: ci
-    if: github.ref == 'refs/heads/main'
-    environment: production
-    
-    steps:
-      - name: Download JAR artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: petclinic-jar
-          path: ./artifact
-
-      - name: Deploy to Production (atomic symlink + rollback + healthcheck)
-        shell: bash
-        run: |
-          set -euxo pipefail
-
-          APP_ROOT="/var/www/petclinic-prod"
-          RELEASE_ID="${{ needs.ci.outputs.release_id }}"
-          RELEASE_DIR="${APP_ROOT}/releases/${RELEASE_ID}"
-          
-          PREV="$(readlink -f "${APP_ROOT}/current" 2>/dev/null || true)"
-          echo "PREV=${PREV}"
-
-          JAR_SOURCE="$(find ./artifact -name "*.jar" | head -n 1)"
-          test -n "${JAR_SOURCE}"
-          echo "JAR_SOURCE=${JAR_SOURCE}"
-
-          sudo -n mkdir -p "${RELEASE_DIR}"
-          sudo -n cp "${JAR_SOURCE}" "${RELEASE_DIR}/app.jar"
-
-          # Switch atomico
-          sudo -n ln -sfn "${RELEASE_DIR}" "${APP_ROOT}/current"
-
-          sudo -n systemctl restart petclinic-prod
-
-          HOST_IP="$(hostname -I | awk '{print $1}')"
-
-          for i in $(seq 1 90); do
-            code="$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 2 --max-time 5 "http://${HOST_IP}:8080/api/health" || true)"
-            echo "Health attempt ${i}/90 -> HTTP ${code}"
-            if [ "${code}" = "200" ]; then
-              echo "PRODUCTION OK"
-              exit 0
-            fi
-            sleep 2
-          done
-
-          echo "Healthcheck FAILED - rolling back"
-
-          if [ -n "${PREV}" ] && [ -d "${PREV}" ]; then
-            sudo -n ln -sfn "${PREV}" "${APP_ROOT}/current"
-            sudo -n systemctl restart petclinic-prod
-            echo "Rollback applied to ${PREV}"
-          else
-            echo "No previous release found to rollback"
-          fi
-          
-          sudo -n systemctl status petclinic-prod --no-pager -l || true
-          sudo -n journalctl -u petclinic-prod -n 200 --no-pager -l || true
-
-          exit 1
