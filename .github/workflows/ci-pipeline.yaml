@@ -75,9 +75,10 @@ jobs:
           TS="$(date -u +'%Y%m%d-%H%M%S')"
           echo "release_id=${TS}-${SHORT_SHA}" >> "$GITHUB_OUTPUT"
           fi
+          
       - name: Debug release id
         run: |
-          echo "RELEASE_ID = ${{ steps.release.outputs.release_id }}"
+          echo "release_id = ${{ steps.release.outputs.release_id }}"
 
       - name: Upload JAR artifact
         uses: actions/upload-artifact@v4
