@@ -98,6 +98,8 @@ jobs:
           sudo systemctl restart petclinic-staging
           sudo systemctl is-active --quiet petclinic-staging
           
+          curl -v http://127.0.0.1:8081/api/health || true
+
           for i in {1..90}; do
           code=$(curl -s -o /dev/null -w "%{http_code}" "http://127.0.0.1:8081/api/health" || true)
           echo "Health attempt $i/90 -> HTTP $code"
