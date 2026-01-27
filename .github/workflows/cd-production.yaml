@@ -1,7 +1,7 @@
 name: CD - Deploy Production
 
 on:
-  workflow_dispatch:
+  workflow_run:
 
 jobs:
   # ... (resto de tu pipeline)
