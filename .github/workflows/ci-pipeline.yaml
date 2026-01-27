@@ -64,6 +64,12 @@ jobs:
           name: petclinic-jar
           path: build/libs/*.jar
           if-no-files-found: error
+      - name: Upload Gradle problems report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gradle-problems-report
+          path: build/reports/problems/
 
   deploy_staging:
     name: CD - Deploy to Staging
