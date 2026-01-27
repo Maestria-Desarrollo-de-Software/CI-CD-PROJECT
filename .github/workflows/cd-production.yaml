@@ -1,71 +1,7 @@
 name: CD - Deploy Production
 
 on:
-    workflow_dispatch: 
-    workflow_run:
-      workflows: ["CI/CD STAGING"] 
-      types:
-        - completed
+  workflow_dispatch:
 
 jobs:
-  deploy_production:
-    name: Deploy to Production
-    if: github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success'
-    runs-on: [self-hosted, production]
-    environment: production
-
-    steps:
-      - name: Download JAR artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: petclinic-jar
-          path: ./artifact
-
-      - name: Deploy to Production (atomic symlink + rollback + healthcheck)
-        shell: bash
-        run: |
-          set -euxo pipefail
-
-          APP_ROOT="/var/www/petclinic-prod"
-          RELEASE_ID="$(cat ./artifact/release_id.txt)"
-          RELEASE_DIR="${APP_ROOT}/releases/${RELEASE_ID}"
-
-          PREV="$(readlink -f "${APP_ROOT}/current" 2>/dev/null || true)"
-          echo "PREV=${PREV}"
-
-          JAR_SOURCE="$(find ./artifact -name "*.jar" | head -n 1)"
-          test -n "${JAR_SOURCE}"
-          echo "JAR_SOURCE=${JAR_SOURCE}"
-
-          sudo -n mkdir -p "${RELEASE_DIR}"
-          sudo -n cp "${JAR_SOURCE}" "${RELEASE_DIR}/app.jar"
-
-          # Switch atómico
-          sudo -n ln -sfn "${RELEASE_DIR}" "${APP_ROOT}/current"
-          sudo -n systemctl restart petclinic-prod
-
-          HOST_IP="$(hostname -I | awk '{print $1}')"
-
-          for i in $(seq 1 90); do
-            code="$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 2 --max-time 5 "http://${HOST_IP}:8080/api/health" || true)"
-            echo "Health attempt ${i}/90 -> HTTP ${code}"
-            if [ "${code}" = "200" ]; then
-              echo "PRODUCTION OK"
-              exit 0
-            fi
-            sleep 2
-          done
-
-          echo "Healthcheck FAILED - rolling back"
-
-          if [ -n "${PREV}" ] && [ -d "${PREV}" ]; then
-            sudo -n ln -sfn "${PREV}" "${APP_ROOT}/current"
-            sudo -n systemctl restart petclinic-prod
-            echo "Rollback applied to ${PREV}"
-          else
-            echo "No previous release found to rollback"
-          fi
-
-          sudo -n systemctl status petclinic-prod --no-pager -l || true
-          sudo -n journalctl -u petclinic-prod -n 200 --no-pager -l || true
-          exit 1
+  # ... (resto de tu pipeline)
