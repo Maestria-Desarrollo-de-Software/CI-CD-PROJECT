@@ -69,16 +69,18 @@ jobs:
         run: |
           set -euo pipefail
           if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
-          echo "release_id=${GITHUB_REF#refs/tags/}" >> "$GITHUB_OUTPUT"
-          elsE
-          SHORT_SHA="$(echo "${GITHUB_SHA}" | cut -c1-8)"
-          TS="$(date -u +'%Y%m%d-%H%M%S')"
-          echo "release_id=${TS}-${SHORT_SHA}" >> "$GITHUB_OUTPUT"
+            echo "release_id=${GITHUB_REF#refs/tags/}" >> "$GITHUB_OUTPUT"
+          else
+            SHORT_SHA="${GITHUB_SHA:0:8}"
+            TS="$(date -u +'%Y%m%d-%H%M%S')"
+            echo "release_id=${TS}-${SHORT_SHA}" >> "$GITHUB_OUTPUT"
           fi
-          
+                
       - name: Debug release id
         run: |
           echo "release_id = ${{ steps.release.outputs.release_id }}"
+          echo "github_ref  = ${{ github.ref }}"
+          echo "github_sha  = ${{ github.sha }}"
 
       - name: Upload JAR artifact
         uses: actions/upload-artifact@v4
