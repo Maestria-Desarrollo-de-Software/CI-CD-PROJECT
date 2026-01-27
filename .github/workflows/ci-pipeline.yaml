@@ -95,10 +95,7 @@ jobs:
           sudo -n cp "${JAR_SOURCE}" "${RELEASE_DIR}/app.jar"
           sudo -n ln -sfn "${RELEASE_DIR}" "${APP_ROOT}/current"
           
-          sudo -n systemctl restart petclinic-staging
-          sudo -n systemctl is-active --quiet petclinic-staging
-          
-          curl -v http://127.0.0.1:8081/api/health || true
+          sudo -n systemctl --no-block restart petclinic-staging
 
           for i in {1..90}; do
           code=$(curl -s -o /dev/null -w "%{http_code}" "http://127.0.0.1:8081/api/health" || true)
