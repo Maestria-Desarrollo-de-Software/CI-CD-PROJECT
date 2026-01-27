@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - develop
+    tags:
+      - "v*"
   pull_request:
 
 jobs:
@@ -33,6 +35,9 @@ jobs:
       SPRING_DATASOURCE_USERNAME: petclinic
       SPRING_DATASOURCE_PASSWORD: petclinic
 
+    outputs:
+      release_id: ${{ steps.release.outputs.release_id }}
+
     steps:
       - uses: actions/checkout@v4
 
@@ -57,12 +62,24 @@ jobs:
       - name: Build Artifact (bootJar) - build once
         run: ./gradlew bootJar -x test
 
+      - name: Compute release id
+        id: release
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            echo "release_id=${GITHUB_REF#refs/tags/}" >> "$GITHUB_OUTPUT"
+          else
+            echo "release_id=${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Upload JAR artifact
         uses: actions/upload-artifact@v4
         with:
           name: petclinic-jar
           path: build/libs/*.jar
           if-no-files-found: error
+
       - name: Upload Gradle problems report
         if: failure()
         uses: actions/upload-artifact@v4
@@ -90,7 +107,7 @@ jobs:
           set -euxo pipefail
 
           APP_ROOT="/var/www/petclinic-staging"
-          RELEASE_ID="${GITHUB_SHA}"
+          RELEASE_ID="${{ needs.ci.outputs.release_id }}"
           RELEASE_DIR="${APP_ROOT}/releases/${RELEASE_ID}"
 
           JAR_SOURCE="$(find ./artifact -name "*.jar" | head -n 1)"
@@ -127,6 +144,7 @@ jobs:
           echo "Listening ports:"
           sudo -n ss -lntp | grep java || true
           exit 1
+
       - name: Upload Gradle problems report
         if: failure()
         uses: actions/upload-artifact@v4
