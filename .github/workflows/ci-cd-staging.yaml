@@ -8,6 +8,9 @@ on:
       - "v*"
   pull_request:
 
+permissions:
+  contents: write   # ← necesario para crear releases
+  
 jobs:
   ci:
     name: CI - Quality Gates + Tests + Build
@@ -61,6 +64,13 @@ jobs:
 
       - name: Build Artifact (bootJar) - build once
         run: ./gradlew bootJar -x test
+      
+      - name: Upload Artifact for Deployment
+        uses: actions/upload-artifact@v4
+        with:
+          name: petclinic-jar # Este nombre es el que buscará download-artifact
+          path: build/libs/*.jar
+          retention-days: 1
 
       - name: Compute release id
         id: release
@@ -80,13 +90,18 @@ jobs:
           echo "release_id = ${{ steps.release.outputs.release_id }}"
           echo "github_ref  = ${{ github.ref }}"
           echo "github_sha  = ${{ github.sha }}"
+      
+      - name: Write release_id file
+        run: echo "${{ steps.release.outputs.release_id }}" > release_id.txt
 
-      - name: Upload JAR artifact
-        uses: actions/upload-artifact@v4
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
         with:
-          name: petclinic-jar
-          path: build/libs/*.jar
-          if-no-files-found: error
+          tag_name: ${{ steps.release.outputs.release_id }}
+          name: Release ${{ steps.release.outputs.release_id }}
+          files: |
+            build/libs/*.jar
+            release_id.txt
 
       - name: Upload Gradle problems report
         if: failure()
@@ -103,11 +118,12 @@ jobs:
     environment: staging
 
     steps:
-      - name: Download JAR artifact
-        uses: actions/download-artifact@v4
+      - name: Download artifact from GitHub Release
+        uses: robinraju/release-downloader@v1.9
         with:
-          name: petclinic-jar
-          path: ./artifact
+          tag: ${{ needs.ci.outputs.release_id }}
+          fileName: "*.jar"
+          out-file-path: ./artifact
 
       - name: Deploy (atomic symlink + restart + healthcheck)
         shell: bash

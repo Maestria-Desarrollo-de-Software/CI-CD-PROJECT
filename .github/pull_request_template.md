@@ -1,5 +1,5 @@
 ## 📌 Descripción
-Describe brevemente qué se hizo en este PR.
+Describe brevemente qué se hizo en este PR..
 
 ## 🧪 Cambios realizados
 - [ ] Nueva funcionalidad
