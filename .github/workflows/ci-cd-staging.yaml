@@ -9,7 +9,7 @@ on:
   pull_request:
 
 permissions:
-  contents: write   # ← necesario para crear releases
+  contents: write
   
 jobs:
   ci:
@@ -62,13 +62,13 @@ jobs:
       - name: Tests + Coverage (JaCoCo)
         run: ./gradlew test jacocoTestReport
 
-      - name: Build Artifact (bootJar) - build once
+      - name: Build Artifact (bootJar)
         run: ./gradlew bootJar -x test
       
-      - name: Upload Artifact for Deployment
+      - name: Upload Artifact to Run (Temporary)
         uses: actions/upload-artifact@v4
         with:
-          name: petclinic-jar # Este nombre es el que buscará download-artifact
+          name: petclinic-jar
           path: build/libs/*.jar
           retention-days: 1
 
@@ -84,31 +84,21 @@ jobs:
             TS="$(date -u +'%Y%m%d-%H%M%S')"
             echo "release_id=${TS}-${SHORT_SHA}" >> "$GITHUB_OUTPUT"
           fi
-                
-      - name: Debug release id
-        run: |
-          echo "release_id = ${{ steps.release.outputs.release_id }}"
-          echo "github_ref  = ${{ github.ref }}"
-          echo "github_sha  = ${{ github.sha }}"
-      
+
       - name: Write release_id file
         run: echo "${{ steps.release.outputs.release_id }}" > release_id.txt
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
+          token: ${{ secrets.MY_RELEASE_TOKEN }}  # ← USA TU TOKEN AQUÍ PARA DISPARAR PROD
           tag_name: ${{ steps.release.outputs.release_id }}
           name: Release ${{ steps.release.outputs.release_id }}
+          draft: false
+          prerelease: false
           files: |
             build/libs/*.jar
             release_id.txt
-
-      - name: Upload Gradle problems report
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: gradle-problems-report
-          path: build/reports/problems/
 
   deploy_staging:
     name: CD - Deploy to Staging
@@ -125,53 +115,24 @@ jobs:
           fileName: "*.jar"
           out-file-path: ./artifact
 
-      - name: Deploy (atomic symlink + restart + healthcheck)
+      - name: Deploy (atomic symlink)
         shell: bash
         run: |
           set -euxo pipefail
-
           APP_ROOT="/var/www/petclinic-staging"
           RELEASE_ID="${{ needs.ci.outputs.release_id }}"
           RELEASE_DIR="${APP_ROOT}/releases/${RELEASE_ID}"
-
           JAR_SOURCE="$(find ./artifact -name "*.jar" | head -n 1)"
-          test -n "${JAR_SOURCE}"
-          echo "JAR_SOURCE=${JAR_SOURCE}"
-
+          
           sudo -n mkdir -p "${RELEASE_DIR}"
           sudo -n cp "${JAR_SOURCE}" "${RELEASE_DIR}/app.jar"
-
-          # symlink atomico
           sudo -n ln -sfn "${RELEASE_DIR}" "${APP_ROOT}/current"
-
-          # restart
           sudo -n systemctl restart petclinic-staging
 
-          # espera + healthcheck (con timeout)
           HOST_IP="$(hostname -I | awk '{print $1}')"
-          echo "HOST_IP=${HOST_IP}"
-
-          for i in $(seq 1 90); do
-            code="$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 2 --max-time 5 "http://${HOST_IP}:8081/api/health" || true)"
-            echo "Health attempt ${i}/90 -> HTTP ${code}"
-            if [ "${code}" = "200" ]; then
-              echo "STAGING OK"
-              exit 0
-            fi
+          for i in $(seq 1 60); do
+            code="$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 2 "http://${HOST_IP}:8081/api/health" || true)"
+            if [ "${code}" = "200" ]; then exit 0; fi
             sleep 2
           done
-
-          echo "Healthcheck FAILED. Service status:"
-          sudo -n systemctl status petclinic-staging --no-pager -l || true
-          echo "Last logs:"
-          sudo -n journalctl -u petclinic-staging -n 200 --no-pager -l || true
-          echo "Listening ports:"
-          sudo -n ss -lntp | grep java || true
           exit 1
-
-      - name: Upload Gradle problems report
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-           name: gradle-problems-report
-           path: build/reports/problems/
