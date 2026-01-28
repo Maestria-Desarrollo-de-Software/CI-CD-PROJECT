@@ -64,6 +64,13 @@ jobs:
 
       - name: Build Artifact (bootJar) - build once
         run: ./gradlew bootJar -x test
+      
+      - name: Upload Artifact for Deployment
+        uses: actions/upload-artifact@v4
+        with:
+          name: petclinic-jar # Este nombre es el que buscará download-artifact
+          path: build/libs/*.jar
+          retention-days: 1
 
       - name: Compute release id
         id: release
