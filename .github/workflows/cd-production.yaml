@@ -1,11 +1,8 @@
 name: CD - Deploy Production
 
 on:
-    workflow_run:
-      workflows: ["CI/CD Staging"] 
-      branches: [dev-ci-cd]
-      types:
-        - completed
+  release:
+    types: [published]
 
 permissions:
   actions: read
@@ -13,7 +10,7 @@ permissions:
 
 jobs:
   deploy_production:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    if: ${{ github.event.release.prerelease == false }}  # Solo releases normales
     name: Deploy to Production    
     runs-on: [self-hosted, production]
     environment: production
@@ -22,8 +19,9 @@ jobs:
       - name: Download artifact from GitHub Release
         uses: robinraju/release-downloader@v1.9
         with:
-          latest: true
+          tag: ${{ github.event.release.tag_name }}
           fileName: "*.jar"
+          out-file-path: ./artifact
 
       - name: Deploy to Production (atomic symlink + rollback + healthcheck)
         shell: bash
@@ -31,7 +29,7 @@ jobs:
           set -euxo pipefail
 
           APP_ROOT="/var/www/petclinic-prod"
-          RELEASE_ID="$(cat ./artifact/release_id.txt)"
+          RELEASE_ID="${{ github.event.release.tag_name }}"
           RELEASE_DIR="${APP_ROOT}/releases/${RELEASE_ID}"
 
           PREV="$(readlink -f "${APP_ROOT}/current" 2>/dev/null || true)"

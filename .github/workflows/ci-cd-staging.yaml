@@ -83,13 +83,18 @@ jobs:
           echo "release_id = ${{ steps.release.outputs.release_id }}"
           echo "github_ref  = ${{ github.ref }}"
           echo "github_sha  = ${{ github.sha }}"
+      
+      - name: Write release_id file
+        run: echo "${{ steps.release.outputs.release_id }}" > release_id.txt
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.release.outputs.release_id }}
           name: Release ${{ steps.release.outputs.release_id }}
-          files: build/libs/*.jar
+          files: |
+            build/libs/*.jar
+            release_id.tx
 
       - name: Upload Gradle problems report
         if: failure()
