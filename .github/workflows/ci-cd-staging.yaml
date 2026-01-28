@@ -15,7 +15,7 @@ jobs:
   ci:
     name: CI - Quality Gates + Tests + Build
     runs-on: ubuntu-latest
-    environment: staging 
+    environment: staging
 
     services:
       mysql:
@@ -34,10 +34,10 @@ jobs:
           --health-retries=15
 
     env:
-      SPRING_PROFILES_ACTIVE: mysql
-      SPRING_DATASOURCE_URL: ${{ secrets.SPRING_DATASOURCE_URL }}
-      SPRING_DATASOURCE_USERNAME: ${{ secrets.SPRING_DATASOURCE_USERNAME }}
-      SPRING_DATASOURCE_PASSWORD: ${{ secrets.SPRING_DATASOURCE_PASSWORD }}
+          SPRING_PROFILES_ACTIVE: mysql
+          SPRING_DATASOURCE_URL: ${{ secrets.SPRING_DATASOURCE_URL }}
+          SPRING_DATASOURCE_USERNAME: ${{ secrets.SPRING_DATASOURCE_USERNAME }}
+          SPRING_DATASOURCE_PASSWORD: ${{ secrets.SPRING_DATASOURCE_PASSWORD }}
 
     outputs:
       release_id: ${{ steps.release.outputs.release_id }}
