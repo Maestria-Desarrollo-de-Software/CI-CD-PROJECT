@@ -13,16 +13,17 @@ permissions:
 
 jobs:
   deploy_production:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     name: Deploy to Production    
     runs-on: [self-hosted, production]
     environment: production
 
     steps:
-      - name: Download JAR artifact
-        uses: actions/download-artifact@v4
+      - name: Download artifact from GitHub Release
+        uses: robinraju/release-downloader@v1.9
         with:
-          name: petclinic-jar
-          path: ./artifact
+          latest: true
+          fileName: "*.jar"
 
       - name: Deploy to Production (atomic symlink + rollback + healthcheck)
         shell: bash

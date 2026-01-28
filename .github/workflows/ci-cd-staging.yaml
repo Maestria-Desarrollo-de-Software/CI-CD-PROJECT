@@ -8,6 +8,9 @@ on:
       - "v*"
   pull_request:
 
+permissions:
+  contents: write   # ← necesario para crear releases
+  
 jobs:
   ci:
     name: CI - Quality Gates + Tests + Build
@@ -81,12 +84,12 @@ jobs:
           echo "github_ref  = ${{ github.ref }}"
           echo "github_sha  = ${{ github.sha }}"
 
-      - name: Upload JAR artifact
-        uses: actions/upload-artifact@v4
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
         with:
-          name: petclinic-jar
-          path: build/libs/*.jar
-          if-no-files-found: error
+          tag_name: ${{ steps.release.outputs.release_id }}
+          name: Release ${{ steps.release.outputs.release_id }}
+          files: build/libs/*.jar
 
       - name: Upload Gradle problems report
         if: failure()
