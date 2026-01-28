@@ -15,15 +15,16 @@ jobs:
   ci:
     name: CI - Quality Gates + Tests + Build
     runs-on: ubuntu-latest
+    environment: staging 
 
     services:
       mysql:
         image: mysql:8.4
         env:
-          MYSQL_DATABASE: petclinic
-          MYSQL_USER: petclinic
-          MYSQL_PASSWORD: petclinic
-          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: ${{ secrets.MYSQL_DATABASE }}
+          MYSQL_USER: ${{ secrets.MYSQL_USER }}
+          MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
+          MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
         ports:
           - 3306:3306
         options: >-
@@ -34,9 +35,9 @@ jobs:
 
     env:
       SPRING_PROFILES_ACTIVE: mysql
-      SPRING_DATASOURCE_URL: jdbc:mysql://localhost:3306/petclinic?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
-      SPRING_DATASOURCE_USERNAME: petclinic
-      SPRING_DATASOURCE_PASSWORD: petclinic
+      SPRING_DATASOURCE_URL: ${{ secrets.SPRING_DATASOURCE_URL }}
+      SPRING_DATASOURCE_USERNAME: ${{ secrets.SPRING_DATASOURCE_USERNAME }}
+      SPRING_DATASOURCE_PASSWORD: ${{ secrets.SPRING_DATASOURCE_PASSWORD }}
 
     outputs:
       release_id: ${{ steps.release.outputs.release_id }}
@@ -91,7 +92,7 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          token: ${{ secrets.MY_RELEASE_TOKEN }}  # ← USA TU TOKEN AQUÍ PARA DISPARAR PROD
+          token: "${{ secrets.MY_RELEASE_TOKEN }}" 
           tag_name: ${{ steps.release.outputs.release_id }}
           name: Release ${{ steps.release.outputs.release_id }}
           draft: false
