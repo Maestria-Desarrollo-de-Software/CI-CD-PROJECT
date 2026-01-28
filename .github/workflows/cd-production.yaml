@@ -1,26 +1,17 @@
 name: CD - Deploy Production
 
 on:
-<<<<<<< HEAD
-    workflow_dispatch: 
-    workflow_run:
-      workflows: ["CI/CD STAGING"] 
-      types:
-        - completed
-=======
   release:
     types: [published]
->>>>>>> dev-ci-cd
+
+permissions:
+  actions: read
+  contents: read
 
 jobs:
   deploy_production:
-<<<<<<< HEAD
-    name: Deploy to Production
-    if: github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success'
-=======
     if: ${{ github.event.release.prerelease == false }}  # Solo releases normales
     name: Deploy to Production    
->>>>>>> dev-ci-cd
     runs-on: [self-hosted, production]
     environment: production
 
