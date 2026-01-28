@@ -106,11 +106,12 @@ jobs:
     environment: staging
 
     steps:
-      - name: Download JAR artifact
-        uses: actions/download-artifact@v4
+      - name: Download artifact from GitHub Release
+        uses: robinraju/release-downloader@v1.9
         with:
-          name: petclinic-jar
-          path: ./artifact
+          tag_name: ${{ needs.ci.outputs.release_id }}
+          fileName: "*.jar"
+          out-file-path: ./artifact
 
       - name: Deploy (atomic symlink + restart + healthcheck)
         shell: bash
