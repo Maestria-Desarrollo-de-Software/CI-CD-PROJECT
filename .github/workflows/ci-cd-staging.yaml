@@ -94,7 +94,7 @@ jobs:
           name: Release ${{ steps.release.outputs.release_id }}
           files: |
             build/libs/*.jar
-            release_id.tx
+            release_id.txt
 
       - name: Upload Gradle problems report
         if: failure()
