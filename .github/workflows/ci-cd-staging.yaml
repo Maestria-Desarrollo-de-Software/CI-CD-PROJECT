@@ -1,0 +1,139 @@
+name: CI/CD Staging
+
+on:
+  push:
+    branches:
+      - develop
+    tags:
+      - "v*"
+  pull_request:
+
+permissions:
+  contents: write
+  
+jobs:
+  ci:
+    name: CI - Quality Gates + Tests + Build
+    runs-on: ubuntu-latest
+    environment: staging
+
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_DATABASE: ${{ secrets.MYSQL_DATABASE }}
+          MYSQL_USER: ${{ secrets.MYSQL_USER }}
+          MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
+          MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=15
+
+    env:
+          SPRING_PROFILES_ACTIVE: mysql
+          SPRING_DATASOURCE_URL: ${{ secrets.SPRING_DATASOURCE_URL }}
+          SPRING_DATASOURCE_USERNAME: ${{ secrets.SPRING_DATASOURCE_USERNAME }}
+          SPRING_DATASOURCE_PASSWORD: ${{ secrets.SPRING_DATASOURCE_PASSWORD }}
+
+    outputs:
+      release_id: ${{ steps.release.outputs.release_id }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+
+      - name: Make gradlew executable
+        run: chmod +x gradlew
+
+      - name: Format/Lint (Spotless)
+        run: ./gradlew spotlessCheck
+
+      - name: Static Analysis (Checkstyle + SpotBugs)
+        run: ./gradlew checkstyleMain checkstyleTest spotbugsMain spotbugsTest
+
+      - name: Tests + Coverage (JaCoCo)
+        run: ./gradlew test jacocoTestReport
+
+      - name: Build Artifact (bootJar)
+        run: ./gradlew bootJar -x test
+      
+      - name: Upload Artifact to Run (Temporary)
+        uses: actions/upload-artifact@v4
+        with:
+          name: petclinic-jar
+          path: build/libs/*.jar
+          retention-days: 1
+
+      - name: Compute release id
+        id: release
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            echo "release_id=${GITHUB_REF#refs/tags/}" >> "$GITHUB_OUTPUT"
+          else
+            SHORT_SHA="${GITHUB_SHA:0:8}"
+            TS="$(date -u +'%Y%m%d-%H%M%S')"
+            echo "release_id=${TS}-${SHORT_SHA}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Write release_id file
+        run: echo "${{ steps.release.outputs.release_id }}" > release_id.txt
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          token: "${{ secrets.MY_RELEASE_TOKEN }}" 
+          tag_name: ${{ steps.release.outputs.release_id }}
+          name: Release ${{ steps.release.outputs.release_id }}
+          draft: false
+          prerelease: false
+          files: |
+            build/libs/*.jar
+            release_id.txt
+
+  deploy_staging:
+    name: CD - Deploy to Staging
+    runs-on: [ self-hosted, staging ]
+    needs: ci
+    if: github.ref == 'refs/heads/develop'
+    environment: staging
+
+    steps:
+      - name: Download artifact from GitHub Release
+        uses: robinraju/release-downloader@v1.9
+        with:
+          tag: ${{ needs.ci.outputs.release_id }}
+          fileName: "*.jar"
+          out-file-path: ./artifact
+
+      - name: Deploy (atomic symlink)
+        shell: bash
+        run: |
+          set -euxo pipefail
+          APP_ROOT="/var/www/petclinic-staging"
+          RELEASE_ID="${{ needs.ci.outputs.release_id }}"
+          RELEASE_DIR="${APP_ROOT}/releases/${RELEASE_ID}"
+          JAR_SOURCE="$(find ./artifact -name "*.jar" | head -n 1)"
+          
+          sudo -n mkdir -p "${RELEASE_DIR}"
+          sudo -n cp "${JAR_SOURCE}" "${RELEASE_DIR}/app.jar"
+          sudo -n ln -sfn "${RELEASE_DIR}" "${APP_ROOT}/current"
+          sudo -n systemctl restart petclinic-staging
+
+          HOST_IP="$(hostname -I | awk '{print $1}')"
+          for i in $(seq 1 60); do
+            code="$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 2 "http://${HOST_IP}:8081/api/health" || true)"
+            if [ "${code}" = "200" ]; then exit 0; fi
+            sleep 2
+          done
+          exit 1

@@ -1,0 +1,63 @@
+name: CD - Deploy Production
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read # Solo lectura porque ya el release existe
+
+jobs:
+  deploy_production:
+    # Esta condición asegura que no se desplieguen pre-releases si no quieres
+    if: github.event.release.draft == false
+    name: Deploy to Production    
+    runs-on: [self-hosted, production]
+    environment: production
+
+    steps:
+      - name: Download artifact from GitHub Release
+        uses: robinraju/release-downloader@v1.9
+        with:
+          tag: ${{ github.event.release.tag_name }}
+          fileName: "*.jar"
+          out-file-path: ./artifact
+
+      - name: Deploy to Production (atomic symlink + rollback)
+        shell: bash
+        run: |
+          set -euxo pipefail
+
+          APP_ROOT="/var/www/petclinic-prod"
+          RELEASE_ID="${{ github.event.release.tag_name }}"
+          RELEASE_DIR="${APP_ROOT}/releases/${RELEASE_ID}"
+
+          PREV="$(readlink -f "${APP_ROOT}/current" 2>/dev/null || true)"
+
+          JAR_SOURCE="$(find ./artifact -name "*.jar" | head -n 1)"
+          test -n "${JAR_SOURCE}"
+
+          sudo -n mkdir -p "${RELEASE_DIR}"
+          sudo -n cp "${JAR_SOURCE}" "${RELEASE_DIR}/app.jar"
+
+          # Switch atómico
+          sudo -n ln -sfn "${RELEASE_DIR}" "${APP_ROOT}/current"
+          sudo -n systemctl restart petclinic-prod
+
+          HOST_IP="$(hostname -I | awk '{print $1}')"
+
+          for i in $(seq 1 90); do
+            code="$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 2 "http://${HOST_IP}:8080/api/health" || true)"
+            if [ "${code}" = "200" ]; then
+              echo "PRODUCTION OK"
+              exit 0
+            fi
+            sleep 2
+          done
+
+          echo "Healthcheck FAILED - rolling back"
+          if [ -n "${PREV}" ] && [ -d "${PREV}" ]; then
+            sudo -n ln -sfn "${PREV}" "${APP_ROOT}/current"
+            sudo -n systemctl restart petclinic-prod
+          fi
+          exit 1
