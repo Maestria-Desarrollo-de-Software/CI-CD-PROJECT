@@ -41,7 +41,7 @@ public class HealthController {
           .body(Map.of("status", "DOWN", "db", "unexpected_response"));
     } catch (Exception ex) {
       return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
-		  .body(Map.of("status", "DOWN", "db", "DOWN", "error", ex.getClass().getSimpleName()));
+          .body(Map.of("status", "DOWN", "db", "DOWN", "error", ex.getClass().getSimpleName()));
     }
   }
 }
