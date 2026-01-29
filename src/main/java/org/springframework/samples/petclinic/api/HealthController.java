@@ -9,20 +9,39 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @SuppressFBWarnings(
-	value = "EI_EXPOSE_REP2",
-	justification = "JdbcTemplate is a Spring-managed dependency; not exposed outside.")
+    value = "EI_EXPOSE_REP2",
+    justification = "JdbcTemplate is a Spring-managed dependency; not exposed outside.")
 @RestController
 public class HealthController {
 
   private final JdbcTemplate jdbcTemplate;
 
+  private final boolean forceFail;
+
   public HealthController(JdbcTemplate jdbcTemplate) {
     this.jdbcTemplate = jdbcTemplate;
+    this.forceFail =
+        Boolean.parseBoolean(System.getenv().getOrDefault("DEMO_FORCE_HEALTH_FAIL", "false"));
   }
 
   @GetMapping("/api/health")
   public ResponseEntity<Map<String, Object>> health() {
-	  return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-		  .body(Map.of("status", "DOWN", "db", "DOWN", "error", "ROLLBACK_DEMO"));
+
+    if (forceFail) {
+      return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+          .body(Map.of("status", "DOWN", "db", "DOWN", "error", "FORCED_DEMO"));
+    }
+
+    try {
+      Integer one = jdbcTemplate.queryForObject("SELECT 1", Integer.class);
+      if (one != null && one == 1) {
+        return ResponseEntity.ok(Map.of("status", "UP", "db", "UP"));
+      }
+      return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+          .body(Map.of("status", "DOWN", "db", "unexpected_response"));
+    } catch (Exception ex) {
+      return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+          .body(Map.of("status", "DOWN", "db", "DOWN", "error", ex.getClass().getSimpleName()));
+    }
   }
 }
