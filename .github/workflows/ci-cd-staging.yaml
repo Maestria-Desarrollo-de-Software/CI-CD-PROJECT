@@ -3,7 +3,7 @@ name: CI/CD Staging
 on:
   push:
     branches:
-      - dev-ci-cd
+      - develop
     tags:
       - "v*"
   pull_request:
@@ -105,7 +105,7 @@ jobs:
     name: CD - Deploy to Staging
     runs-on: [ self-hosted, staging ]
     needs: ci
-    if: github.ref == 'refs/heads/dev-ci-cd'
+    if: github.ref == 'refs/heads/develop'
     environment: staging
 
     steps:
